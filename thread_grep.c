@@ -5,6 +5,7 @@
 #include <stdbool.h>
 #include <pthread.h>
 #include <semaphore.h>
+#include <unistd.h>
 
 int performSingularGrep(char *filename, char *regex);
 
@@ -104,10 +105,8 @@ void* consumerFunction(void* ptr) {
     printf("Starting child %d with regex %s\n", args->childNum, args->regex);
     while (true) {
         pthread_mutex_lock(&mutex);
-        printf("Child %d\n", args->childNum);
 
         while (bufferSize == 0 && !finishedReadingFile) {
-            printf("Sleeping child %d\n", args->childNum);
             pthread_cond_wait(&bufferFull, &mutex); // Wait until the buffer has stuff to process
         }
 
@@ -117,7 +116,6 @@ void* consumerFunction(void* ptr) {
             pthread_exit(0);
         }
 
-//        printf("Going to read from buffer at position %d\n", (bufferSize - 1));
         char* line = linesBuffer[bufferSize - 1];
         int lineNum = lineNumBuffer[bufferSize - 1];
         printf("Child %d: line %d - '%s'\n", args->childNum, lineNum, line);
@@ -152,7 +150,6 @@ void* producerFunction(void* ptr) {
         linesBuffer[bufferSize] = malloc(strlen(line) * sizeof(char));
         strcpy(linesBuffer[bufferSize], line);
         bufferSize++; // Increase the buffer size
-        printf("Produced %s\n", line);
 
         pthread_cond_signal(&bufferFull); // let the consumers know its no longer empty
         pthread_mutex_unlock(&mutex); // Unprotect the variables
@@ -209,7 +206,13 @@ void checkLine(int lineNumber, char *line, char *regex) {
 }
 
 bool matchString(char *line, int offset, char *regex) {
+    usleep(100);
     if (offset % 8 == 0) return true;
     return false;
-}
+} 
 
+// 10 process: real	0m12.020s
+// 1 process: real 1m26.915s
+
+// 1 thread: real	1m31.257s
+// 10 threads: real	0m10.773s

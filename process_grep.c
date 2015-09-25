@@ -4,6 +4,7 @@
 #include <string.h>
 #include <stdbool.h>
 #include <unistd.h>
+#include <sys/wait.h>
 #include "list/arraylist.h"
 
 int performParallelGrep(const char *filename, const char *regex, const int numChildren);
@@ -95,6 +96,7 @@ int performParallelGrep(const char *filename, const char *regex, const int numCh
     }
 
     wait(NULL); // wait for the child process to exit before I do the same
+    printf("All done!\n");
     exit(EXIT_SUCCESS);
 }
 
