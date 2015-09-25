@@ -1,3 +1,4 @@
+#define _GNU_SOURCE
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
@@ -37,9 +38,9 @@ int main(int argc, char** argv) {
 
 #define MAX_BUFFER_SIZE 1000
 pthread_mutex_t mutex;
-sem_t bufferFull;
-sem_t bufferEmpty;
-sem_open()
+//sem_t bufferFull;
+//sem_t bufferEmpty;
+//sem_open()
 //sem_init(&cFull, 0, 0); /* Initialize full semaphore */
 //sem_init(&cEmpty, 0, BUFFER_SIZE); /* Initialize empty semaphore */
 
@@ -112,6 +113,7 @@ void* consumerFunction(void* ptr) {
 
         if (finishedReadingFile && bufferSize <= 0) {
             printf("Exiting child %d\n", args->childNum);
+            pthread_mutex_unlock(&mutex);
             pthread_exit(0);
         }
 
