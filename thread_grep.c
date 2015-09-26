@@ -4,14 +4,13 @@
 #include <string.h>
 #include <stdbool.h>
 #include <pthread.h>
-#include <semaphore.h>
 #include <unistd.h>
+#include "list/arraylist.h"
+#include "regex/regex.h"
 
 int performSingularGrep(char *filename, char *regex);
 
 void checkLine(int lineNum, char *line, char *regex);
-
-bool matchString(char *line, int offset, char *regex);
 
 int performParallelGrep(char *filename, char *regex, int numThreads);
 
@@ -39,12 +38,6 @@ int main(int argc, char** argv) {
 
 #define MAX_BUFFER_SIZE 1000
 pthread_mutex_t mutex;
-//sem_t bufferFull;
-//sem_t bufferEmpty;
-//sem_open()
-//sem_init(&cFull, 0, 0); /* Initialize full semaphore */
-//sem_init(&cEmpty, 0, BUFFER_SIZE); /* Initialize empty semaphore */
-
 pthread_cond_t bufferFull, bufferEmpty;
 
 char* linesBuffer[MAX_BUFFER_SIZE];
@@ -102,7 +95,6 @@ int performParallelGrep(char *filename, char *regex, int numThreads) {
 
 void* consumerFunction(void* ptr) {
     ConsumerArgs* args = ptr;
-    printf("Starting child %d with regex %s\n", args->childNum, args->regex);
     while (true) {
         pthread_mutex_lock(&mutex);
 
@@ -111,14 +103,13 @@ void* consumerFunction(void* ptr) {
         }
 
         if (finishedReadingFile && bufferSize <= 0) {
-            printf("Exiting child %d\n", args->childNum);
             pthread_mutex_unlock(&mutex);
             pthread_exit(0);
         }
 
         char* line = linesBuffer[bufferSize - 1];
         int lineNum = lineNumBuffer[bufferSize - 1];
-        printf("Child %d: line %d - '%s'\n", args->childNum, lineNum, line);
+        checkLine(lineNum, line, args->regex);
         bufferSize--;
 
         pthread_cond_signal(&bufferEmpty);
@@ -158,7 +149,6 @@ void* producerFunction(void* ptr) {
     }
 
     pthread_mutex_lock(&mutex);
-    printf("Finished reading file\n");
     finishedReadingFile = true;
     pthread_cond_broadcast(&bufferFull);
     pthread_mutex_unlock(&mutex);
@@ -166,7 +156,6 @@ void* producerFunction(void* ptr) {
     fclose(file);
     free(line);
 
-    printf("Exiting producer.\n");
 
     pthread_exit(0);
 }
@@ -195,24 +184,13 @@ int performSingularGrep(char *filename, char *regex) {
 }
 
 void checkLine(int lineNumber, char *line, char *regex) {
-    int offset = 0;
-    size_t lineLength = strlen(line);
-    do {
-        if (matchString(line, offset, regex)) {
-            printf("%d:%d - %s\n", lineNumber, offset, line);
-        }
-        offset++;
-    } while (offset < lineLength);
+    ArrayList* result = matchingPositions(line, regex);
+    for (int i = 0; i < result->size; i++) {
+        int position = alGet(result, i);
+        printf("%d:%d\t%s\n\t", lineNumber, position, line);
+        for (int k = 0; k < position; k++) printf(" ");
+        printf("^\n");
+    }
+
+    alDelete(result);
 }
-
-bool matchString(char *line, int offset, char *regex) {
-    usleep(100);
-    if (offset % 8 == 0) return true;
-    return false;
-} 
-
-// 10 process: real	0m12.020s
-// 1 process: real 1m26.915s
-
-// 1 thread: real	1m31.257s
-// 10 threads: real	0m10.773s

@@ -151,3 +151,8 @@ int alCapacity(ArrayList *list) {
 bool alIsEmpty(ArrayList *list) {
     return alSize(list) == 0;
 }
+
+void alDelete(ArrayList *list) {
+    free(list->data);
+    free(list);
+}

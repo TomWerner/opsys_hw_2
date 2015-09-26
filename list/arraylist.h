@@ -23,5 +23,6 @@ int alRemove(ArrayList* list, int index);
 int alSize(ArrayList* list);
 int alCapacity(ArrayList* list);
 bool alIsEmpty(ArrayList* list);
+void alDelete(ArrayList *list);
 
 #endif //TESTPROJ_ARRAYLIST_H

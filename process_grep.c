@@ -2,22 +2,20 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
-#include <stdbool.h>
 #include <unistd.h>
 #include <sys/wait.h>
 #include "list/arraylist.h"
+#include "regex/regex.h"
 
-int performParallelGrep(const char *filename, const char *regex, const int numChildren);
+int performParallelGrep(const char *filename, char *regex, const int numChildren);
 
-void checkLine(const int lineNum, const char *line, const char *regex);
+void checkLine(int lineNum, char *line, char *regex);
 
-bool matchString(const char *line, const int offset, const char *regex);
-
-void consumerProcess(const int childNumber, const int numThreads, const char *regex, int pipeHandles[2]);
+void consumerProcess(const int childNumber, const int numThreads, char *regex, int pipeHandles[2]);
 
 void producerProcess(int numChildren, int pipeHandles[][2], FILE *file);
 
-int performSingularGrep(const char *filename, const char *regex) ;
+int performSingularGrep(const char *filename, char *regex) ;
 
 int main(int argc, char** argv) {
     if (argc != 3 && argc != 5) {
@@ -37,7 +35,7 @@ int main(int argc, char** argv) {
         return performSingularGrep(filename, regex);
 }
 
-int performSingularGrep(const char *filename, const char *regex) {
+int performSingularGrep(const char *filename, char *regex) {
     FILE* file = fopen(filename, "r");
     if (file == NULL) {
         printf("Could not open file '%s'.\nExiting program.", filename);
@@ -58,7 +56,7 @@ int performSingularGrep(const char *filename, const char *regex) {
 }
 
 
-int performParallelGrep(const char *filename, const char *regex, const int numChildren) {
+int performParallelGrep(const char *filename, char *regex, const int numChildren) {
     int pipeHandles[numChildren][2];
     pid_t cpid[numChildren];
 
@@ -75,7 +73,6 @@ int performParallelGrep(const char *filename, const char *regex, const int numCh
             consumerProcess(i, numChildren, regex, pipeHandles[i]);
 
             close(pipeHandles[i][0]); // close the read-end of the pipe
-            printf("Done with child %d\n", i);
             exit(EXIT_SUCCESS);
         }
     }
@@ -96,7 +93,6 @@ int performParallelGrep(const char *filename, const char *regex, const int numCh
     }
 
     wait(NULL); // wait for the child process to exit before I do the same
-    printf("All done!\n");
     exit(EXIT_SUCCESS);
 }
 
@@ -126,7 +122,7 @@ void producerProcess(int numChildren, int pipeHandles[][2], FILE *file) {
     if (newlineFix != NULL) free(newlineFix);
 }
 
-void consumerProcess(const int childNumber, const int numThreads, const char *regex, int pipeHandles[2]) {
+void consumerProcess(const int childNumber, const int numThreads, char *regex, int pipeHandles[2]) {
     char buf;
 
     ArrayList* charBuffer = alCreateList(100);
@@ -156,19 +152,14 @@ void consumerProcess(const int childNumber, const int numThreads, const char *re
     free(charBuffer);
 }
 
-void checkLine(const int lineNumber, const char *line, const char *regex) {
-    int offset = 0;
-    size_t lineLength = strlen(line);
-    do {
-        if (matchString(line, offset, regex)) {
-            printf("%d:%d - %s", lineNumber, offset, line);
-        }
-        offset++;
-    } while (offset < lineLength);
-}
+void checkLine(int lineNumber, char *line, char *regex) {
+    ArrayList* result = matchingPositions(line, regex);
+    for (int i = 0; i < result->size; i++) {
+        int position = alGet(result, i);
+        printf("%d:%d\t%s\n\t", lineNumber, position, line);
+        for (int k = 0; k < position; k++) printf(" ");
+        printf("^\n");
+    }
 
-bool matchString(const char *line, const int offset, const char *regex) {
-    usleep(100);
-    if (offset % 8 == 0) return true;
-    return false;
+    alDelete(result);
 }
