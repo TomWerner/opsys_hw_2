@@ -45,7 +45,7 @@ int performSingularGrep(const char *filename, char *regex) {
     char * line = NULL;
     size_t len = 0;
     ssize_t read;
-    int lineNumber = 0;
+    int lineNumber = 1;
 
     while ((read = getline(&line, &len, file)) != -1) {
         checkLine(lineNumber, line, regex); // Check the string
@@ -102,7 +102,7 @@ void producerProcess(int numChildren, int pipeHandles[][2], FILE *file) {
     size_t len = 0;
     ssize_t read;
 
-    int lineNum = 0;
+    int lineNum = 1;
     while ((read = getline(&line, &len, file)) != -1) {
         if (line[strlen(line) - 1] != '\n') {
             newlineFix = malloc(strlen(line) + 2); // \n and \0

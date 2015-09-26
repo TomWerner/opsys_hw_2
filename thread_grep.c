@@ -130,7 +130,7 @@ void* producerFunction(void* ptr) {
     size_t len = 0;
     ssize_t read;
 
-    int lineNum = 0;
+    int lineNum = 1;
     while ((read = getline(&line, &len, file)) != -1) {
         pthread_mutex_lock(&mutex); // protect the buffer and bufferSize
         while (bufferSize == MAX_BUFFER_SIZE) // While the buffer is full wait
@@ -171,7 +171,7 @@ int performSingularGrep(char *filename, char *regex) {
     size_t len = 0;
     ssize_t read;
 
-    int lineNum = 0;
+    int lineNum = 1;
     while ((read = getline(&line, &len, file)) != -1) {
         checkLine(lineNum, line, regex);
         lineNum++;
