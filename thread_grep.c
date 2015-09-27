@@ -10,7 +10,7 @@
 
 int performSingularGrep(char *filename, char *regex);
 
-void checkLine(int lineNum, char *line, char *regex);
+void checkLine(int lineNum, char *line, char *regex, int i);
 
 int performParallelGrep(char *filename, char *regex, int numThreads);
 
@@ -109,7 +109,7 @@ void* consumerFunction(void* ptr) {
 
         char* line = linesBuffer[bufferSize - 1];
         int lineNum = lineNumBuffer[bufferSize - 1];
-        checkLine(lineNum, line, args->regex);
+        checkLine(lineNum, line, args->regex, args->childNum);
         bufferSize--;
 
         pthread_cond_signal(&bufferEmpty);
@@ -138,8 +138,9 @@ void* producerFunction(void* ptr) {
 
         lineNumBuffer[bufferSize] = lineNum;
 
-        linesBuffer[bufferSize] = malloc(strlen(line) * sizeof(char));
+        linesBuffer[bufferSize] = malloc(strlen(line) * sizeof(char) + 1);
         strcpy(linesBuffer[bufferSize], line);
+        linesBuffer[bufferSize][strlen(line)] = '\0';
         bufferSize++; // Increase the buffer size
 
         pthread_cond_signal(&bufferFull); // let the consumers know its no longer empty
@@ -173,7 +174,7 @@ int performSingularGrep(char *filename, char *regex) {
 
     int lineNum = 1;
     while ((read = getline(&line, &len, file)) != -1) {
-        checkLine(lineNum, line, regex);
+        checkLine(lineNum, line, regex, 0);
         lineNum++;
     }
 
@@ -183,13 +184,13 @@ int performSingularGrep(char *filename, char *regex) {
     return 0;
 }
 
-void checkLine(int lineNumber, char *line, char *regex) {
+void checkLine(int lineNumber, char *line, char *regex, int childNum) {
     ArrayList* result = matchingPositions(line, regex);
     for (int i = 0; i < result->size; i++) {
         int position = alGet(result, i);
-        printf("%d:%d\t%s\n\t", lineNumber, position, line);
-        for (int k = 0; k < position; k++) printf(" ");
-        printf("^\n");
+        printf("%d:%d\t%s", lineNumber, position, line);
+//        for (int k = 0; k < position; k++) printf(" ");
+//        printf("^\n");
     }
 
     alDelete(result);

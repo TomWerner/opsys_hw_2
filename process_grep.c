@@ -9,7 +9,7 @@
 
 int performParallelGrep(const char *filename, char *regex, const int numChildren);
 
-void checkLine(int lineNum, char *line, char *regex);
+void checkLine(int lineNum, char *line, char *regex, int childNum);
 
 void consumerProcess(const int childNumber, const int numThreads, char *regex, int pipeHandles[2]);
 
@@ -48,7 +48,7 @@ int performSingularGrep(const char *filename, char *regex) {
     int lineNumber = 1;
 
     while ((read = getline(&line, &len, file)) != -1) {
-        checkLine(lineNumber, line, regex); // Check the string
+        checkLine(lineNumber, line, regex, 0); // Check the string
         lineNumber++;
     }
 
@@ -60,6 +60,7 @@ int performParallelGrep(const char *filename, char *regex, const int numChildren
     int pipeHandles[numChildren][2];
     pid_t cpid[numChildren];
 
+    int numSuccessfulChildren = numChildren;
     for (int i = 0; i < numChildren; i++) {
         pipe((int *) pipeHandles[i]);
         cpid[i] = fork();
@@ -71,9 +72,13 @@ int performParallelGrep(const char *filename, char *regex, const int numChildren
             // I am the child
             close(pipeHandles[i][1]); // close the write-end of the pipe, I'm not going to use it
             consumerProcess(i, numChildren, regex, pipeHandles[i]);
-
             close(pipeHandles[i][0]); // close the read-end of the pipe
             exit(EXIT_SUCCESS);
+        }
+        else {
+            if (pipeHandles[i][0] < 3 || pipeHandles[i][1] < 3 || pipeHandles[i][0] > 255 || pipeHandles[i][1] > 255) {
+                numSuccessfulChildren--;
+            }
         }
     }
 
@@ -84,7 +89,7 @@ int performParallelGrep(const char *filename, char *regex, const int numChildren
         exit(EXIT_FAILURE);
     }
 
-    producerProcess(numChildren, pipeHandles, file);
+    producerProcess(numSuccessfulChildren, pipeHandles, file);
 
     // Close it up boys
     for (int i = 0; i < numChildren; i++) {
@@ -142,7 +147,7 @@ void consumerProcess(const int childNumber, const int numThreads, char *regex, i
                 line[i] = (char) alGet(charBuffer, i);
             }
 
-            checkLine(lineNumber, line, regex); // Check the string
+            checkLine(lineNumber, line, regex, childNumber); // Check the string
             lineNumber += numThreads; // Round robin process assignment, so the i'th process gets all lines %i == 0
             charBuffer->size = 0; // Reset the list, it will get overwritten
             free(line); // return the memory
@@ -152,13 +157,11 @@ void consumerProcess(const int childNumber, const int numThreads, char *regex, i
     free(charBuffer);
 }
 
-void checkLine(int lineNumber, char *line, char *regex) {
+void checkLine(int lineNumber, char *line, char *regex, int childNum) {
     ArrayList* result = matchingPositions(line, regex);
     for (int i = 0; i < result->size; i++) {
         int position = alGet(result, i);
-        printf("%d:%d\t%s\n\t", lineNumber, position, line);
-        for (int k = 0; k < position; k++) printf(" ");
-        printf("^\n");
+        printf("%d:%d\t%s", lineNumber, position, line);
     }
 
     alDelete(result);
