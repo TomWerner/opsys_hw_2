@@ -111,6 +111,7 @@ void* consumerFunction(void* ptr) {
         int lineNum = lineNumBuffer[bufferSize - 1];
         checkLine(lineNum, line, args->regex, args->childNum);
         bufferSize--;
+        free(line);
 
         pthread_cond_signal(&bufferEmpty);
 
