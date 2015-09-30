@@ -189,7 +189,7 @@ void checkLine(int lineNumber, char *line, char *regex, int childNum) {
     ArrayList* result = matchingPositions(line, regex);
     for (int i = 0; i < result->size; i++) {
         int position = alGet(result, i);
-        printf("%d:%d\t%s", lineNumber, position, line);
+        printf("%d:%d\n", lineNumber, position);
 //        for (int k = 0; k < position; k++) printf(" ");
 //        printf("^\n");
     }

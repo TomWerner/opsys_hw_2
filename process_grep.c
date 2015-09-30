@@ -159,9 +159,11 @@ void consumerProcess(const int childNumber, const int numThreads, char *regex, i
 
 void checkLine(int lineNumber, char *line, char *regex, int childNum) {
     ArrayList* result = matchingPositions(line, regex);
+    char buffer[100];
     for (int i = 0; i < result->size; i++) {
         int position = alGet(result, i);
-        printf("%d:%d\t%s", lineNumber, position, line);
+        sprintf(buffer, "%d:%d\n", lineNumber, position);
+        write(STDOUT_FILENO, buffer, strlen(buffer));
     }
 
     alDelete(result);
