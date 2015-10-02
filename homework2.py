@@ -18,7 +18,7 @@ styles = {
 fig, ax = plt.subplots()
 
 
-for testFile in ["test.txt", "grep_proc.c", "bigFile.txt"]:
+for testFile in ["test.txt", "grep_proc.c"]:
     for testString in ["for (int"]:
         latest = None
         for codeFile in ["grep_thread.c", "grep_proc.c"]:

@@ -4,6 +4,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <unistd.h>
+#include <sys/wait.h>
 
 typedef struct arrayList {
     int size;
@@ -435,5 +436,5 @@ void checkLine(int lineNumber, char *line, char *regex, int childNum) {
     }
 
     alDelete(result);
-    usleep(25);
+    usleep(100);
 }
