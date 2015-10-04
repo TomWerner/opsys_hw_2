@@ -5,23 +5,18 @@ from subprocess import Popen
 import time
 
 myPath = os.path.dirname(os.path.realpath(__file__))
-numChildrenList = [1, 10]
+numChildrenList = [5]
 colors = {
     'tom_werner_hw2_problem1_grep_thread.c': 'r',
     'tom_werner_hw2_problem1_grep_proc.c': 'b'
 }
-styles = {
-    'smallFile.txt': '--',
-    'bigFile.txt': ':'
-}
+fileSizes = [107, 3236749, 6473499]
 fig, ax = plt.subplots()
 
-
-for testFile in ["smallFile.txt", "bigFile.txt"]:
-    for testString in ["for (int"]:
-        latest = None
-        for codeFile in ["tom_werner_hw2_problem1_grep_thread.c", "tom_werner_hw2_problem1_grep_proc.c"]:
-            times = []
+for codeFile in ["tom_werner_hw2_problem1_grep_thread.c", "tom_werner_hw2_problem1_grep_proc.c"]:
+    times = []
+    for testFile in ["smallFile.txt", "mediumFile.txt", "bigFile.txt"]:
+        for testString in ["for (int"]:
             for numChildren in numChildrenList:
                 start = time.time() * 1000
                 command = "cd " + str(myPath) + \
@@ -32,17 +27,11 @@ for testFile in ["smallFile.txt", "bigFile.txt"]:
                 end = time.time() * 1000
 
                 times.append(end - start)
- 
-                resultSet = set([x.decode().strip() for x in result])
-                if latest != None and resultSet != latest:
-                    print(command, result)
-                    print("Error", codeFile, testFile, ",", testString, ",", numChildren, latest, resultSet)
-                latest = resultSet
-            ax.plot(numChildrenList, times, colors[codeFile] + styles[testFile], label = testFile+","+codeFile)
+    ax.plot(fileSizes, times, colors[codeFile], label = testFile+","+codeFile[24:])
                 
                 
 plt.title("Grep times")
-plt.xlabel('Number of children')
+plt.xlabel('File size (bytes)')
 plt.ylabel('Time in milliseconds')
 
 # Shrink current axis by 20%

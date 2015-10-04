@@ -1,0 +1,16 @@
+file_size_vs_thread_proc.png graph
+ - As the file size increased past trivially small files, the thread implementation got faster. I think this
+   is because of the lower overhead associated with thread switching as opposed to process switching. As expected,
+   the time to execute for both processes and threads increased linearly as the file size size increased, but the slope
+   of the thread program execution time was lower.
+ - I personally thought that the thread implementation was easier because it was much easier to share variables and data
+   between the threads than between the processes
+
+added_delay and no_delay grep performance graph
+ - When there was no delay added to the regex checking code, the single threaded implementation for threads and processes
+   was the fastest for small and large file sizes. I think this is because the time to do the regex checking was so much
+   faster than the time to read a line of text that parallelization of the code didn't help any, and in fact added
+   overhead. To confirm this hypothesis, I added a 100 usecond delay to the code doing the regex checking. That is the
+   added_delay graph, and there the more children (for processes or threads) the faster the code executed. This might
+   be fixed if I read in more than one line from the file at a time, but for simplicity that's how I implemented it.
+   
