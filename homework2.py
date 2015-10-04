@@ -11,17 +11,16 @@ colors = {
     'grep_proc.c': 'b'
 }
 styles = {
-    'test.txt': '--',
-    'grep_proc.c': '',
+    'smallFile.txt': '--',
     'bigFile.txt': ':'
 }
 fig, ax = plt.subplots()
 
 
-for testFile in ["test.txt", "grep_proc.c"]:
+for testFile in ["smallFile.txt", "bigFile.txt"]:
     for testString in ["for (int"]:
         latest = None
-        for codeFile in ["grep_thread.c", "grep_proc.c"]:
+        for codeFile in ["tom_werner_hw2_problem1_grep_thread.c", "tom_werner_hw2_problem1_grep_proc.c"]:
             times = []
             for numChildren in numChildrenList:
                 start = time.time() * 1000
